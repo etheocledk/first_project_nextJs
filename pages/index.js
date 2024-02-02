@@ -107,7 +107,12 @@ export default function Home() {
 
   //function to formatted the date
   const formattedDate = (formData) => {
-    const date = formData.split('T')[0]
+    let date;
+    if (formData.length != 0) {
+      date = formData.split('T')[0]
+    } else {
+      date = ""
+    }
     return date
   }
 
@@ -136,11 +141,20 @@ export default function Home() {
     let customerId = selectedId
     event.preventDefault();
     try {
-      const response = await fetch(`/api/updateCustomer/${customerId}`, {
+      // const response = await fetch(`/api/updateCustomer/${customerId}`, {
+      //   method: 'PUT',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(formData),
+      // });
+      const response = await fetch(`/api/updateCustomer?customerId=${customerId}`, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
-      });
-
+      })
       if (!response.ok) {
         throw new Error('Erreur lors de la mise à jour du client');
       }
