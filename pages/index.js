@@ -68,6 +68,59 @@ export default function Home() {
     }
   };
 
+  const UpdateForm = () => {
+    const [formData, setFormData] = useState({
+      firstName: '',
+      lastName: '',
+      dob: '',
+      cp: '',
+      income: '',
+      civ: '',
+      email: '',
+      city: '',
+    });
+
+    const handleChange = (e) => {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value,
+      });
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      try {
+        const customerId = 123;
+        await updateCustomer(customerId, formData);
+        console.log('Mise à jour réussie!');
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du client:', error);
+      }
+    }; async function updateCustomer(customerId, formData) {
+      try {
+        const response = await fetch(`/api/updateCustomer/${customerId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la mise à jour du client');
+        }
+
+        const data = await response.json();
+        console.log(data.message);
+
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du client:', error.message);
+      }
+    }
+
+  }
+
   return (
     <>
       <Head>
