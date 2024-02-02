@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Modal from 'react-modal';
 import { useEffect, useState } from 'react';
 
 
@@ -116,18 +115,6 @@ export default function Home() {
     return date
   }
 
-  // const UpdateForm = () => {
-  //   const [formData, setFormData] = useState({
-  //     firstName: '',
-  //     lastName: '',
-  //     dob: '',
-  //     cp: '',
-  //     income: '',
-  //     civ: '',
-  //     email: '',
-  //     city: '',
-  //   });
-
   const handleChange = (event) => {
     setFormData({
       ...formData,
@@ -141,13 +128,6 @@ export default function Home() {
     let customerId = selectedId
     event.preventDefault();
     try {
-      // const response = await fetch(`/api/updateCustomer/${customerId}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // });
       const response = await fetch(`/api/updateCustomer?customerId=${customerId}`, {
         method: 'PUT',
         headers: {
