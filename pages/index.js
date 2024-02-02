@@ -4,10 +4,23 @@ import { useEffect, useState } from 'react';
 
 
 export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [singleCustomer, setSingleCustomer] = useState(null)
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    dob: '',
+    cp: '',
+    income: '',
+    civ: '',
+    email: '',
+    city: '',
+  });
 
   useEffect(() => {
+    //function to get all customers
     const fetchCustomers = async () => {
       try {
         const response = await fetch('/api/customer');
@@ -21,13 +34,12 @@ export default function Home() {
     fetchCustomers();
   }, []);
 
-
-  const [selectedFile, setSelectedFile] = useState(null);
-
+  //function to get file
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
 
+  //function to save file
   const handleSave = async () => {
     if (selectedFile) {
       const formData = new FormData();
@@ -55,7 +67,7 @@ export default function Home() {
     }
   };
 
-
+  //function to delete customer
   const handleDelete = async (customerId) => {
     console.log("customerId", customerId);
     try {
@@ -68,58 +80,78 @@ export default function Home() {
     }
   };
 
-  const UpdateForm = () => {
-    const [formData, setFormData] = useState({
-      firstName: '',
-      lastName: '',
-      dob: '',
-      cp: '',
-      income: '',
-      civ: '',
-      email: '',
-      city: '',
-    });
-
-    const handleChange = (e) => {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
-    };
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-
-      try {
-        const customerId = 123;
-        await updateCustomer(customerId, formData);
-        console.log('Mise à jour réussie!');
-      } catch (error) {
-        console.error('Erreur lors de la mise à jour du client:', error);
+  //function to get single customer
+  const getSingleCustomer = async (customerId) => {
+    try {
+      const response = await fetch(`/api/single_customer?customerId=${customerId}`);
+      const data = await response.json();
+      if (data.length != 0) {
+        setSingleCustomer(data);
+        setSelectedId(data.id)
+        setFormData({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dob: data.dob,
+          cp: data.cp,
+          income: data.income,
+          civ: data.civ,
+          email: data.email,
+          city: data.city,
+        })
       }
-    }; async function updateCustomer(customerId, formData) {
-      try {
-        const response = await fetch(`/api/updateCustomer/${customerId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
 
-        if (!response.ok) {
-          throw new Error('Erreur lors de la mise à jour du client');
-        }
-
-        const data = await response.json();
-        console.log(data.message);
-
-      } catch (error) {
-        console.error('Erreur lors de la mise à jour du client:', error.message);
-      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression du client :', error);
     }
+  };
 
+  //function to formatted the date
+  const formattedDate = (formData) => {
+    const date = formData.split('T')[0]
+    return date
   }
+
+  // const UpdateForm = () => {
+  //   const [formData, setFormData] = useState({
+  //     firstName: '',
+  //     lastName: '',
+  //     dob: '',
+  //     cp: '',
+  //     income: '',
+  //     civ: '',
+  //     email: '',
+  //     city: '',
+  //   });
+
+  const handleChange = (event) => {
+    setFormData({
+      ...formData,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  //function de modification
+  const handleSubmit = async (event) => {
+    console.log("selectedId", selectedId);
+    let customerId = selectedId
+    event.preventDefault();
+    try {
+      const response = await fetch(`/api/updateCustomer/${customerId}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour du client');
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du client:', error.message);
+    }
+  };
 
   return (
     <>
@@ -156,7 +188,7 @@ export default function Home() {
                     <td className='border border-gray-300 p-2 text-center'>{customer.cp}</td>
                     <td className='border border-gray-300 p-2 text-center'>{customer.income}</td>
                     <td className='border border-gray-300 p-2 text-center'>
-                      <button className='bg-blue-500 text-white px-4 py-2 rounded mr-2'>Modifier</button>
+                      <button className='bg-blue-500 text-white px-4 py-2 rounded mr-2' onClick={() => getSingleCustomer(customer.id)}>Modifier</button>
                       <button className='bg-red-500 text-white px-4 py-2 rounded' onClick={() => handleDelete(customer.id)}>Supprimer</button>
                     </td>
                   </tr>
@@ -186,7 +218,7 @@ export default function Home() {
               </form>
             </div>
             <div>
-              <form className="max-w-md mx-auto mt-4 p-6 bg-white rounded-md shadow-md">
+              <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-4 p-6 bg-white rounded-md shadow-md">
                 <h2 className='text-2xl font-semibold mb-6'>Modifier</h2>
                 <div className="mb-4">
                   <label htmlFor="firstName" className="text-gray-600">Prénom :</label>
@@ -194,6 +226,8 @@ export default function Home() {
                     type="text"
                     id="firstName"
                     name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -203,7 +237,9 @@ export default function Home() {
                   <input
                     type="text"
                     id="lastName"
+                    value={formData.lastName}
                     name="lastName"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -213,7 +249,9 @@ export default function Home() {
                   <input
                     type="date"
                     id="dob"
+                    value={formattedDate(formData.dob)}
                     name="dob"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -223,7 +261,9 @@ export default function Home() {
                   <input
                     type="text"
                     id="cp"
+                    value={formData.cp}
                     name="cp"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -233,7 +273,9 @@ export default function Home() {
                   <input
                     type="number"
                     id="income"
+                    value={formData.income}
                     name="income"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -242,7 +284,9 @@ export default function Home() {
                   <input
                     type="text"
                     id="civ"
+                    value={formData.civ}
                     name="civ"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -252,7 +296,9 @@ export default function Home() {
                   <input
                     type="email"
                     id="email"
+                    value={formData.email}
                     name="email"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
@@ -262,11 +308,13 @@ export default function Home() {
                   <input
                     type="text"
                     id="city"
+                    value={formData.city}
                     name="city"
+                    onChange={handleChange}
                     className="mt-2 p-2 border border-gray-300 w-full rounded-md"
                   />
                 </div>
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+                <button type="submit" className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" >
                   Mettre à Jour
                 </button>
               </form>
